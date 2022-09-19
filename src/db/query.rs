@@ -60,7 +60,7 @@ pub async fn ocorrencias(pool:&MySqlPool)->Vec<Ocorrencia>{
 		SELECT OcoId, SE, AL, EQP, DtHrIni, DtHrFim, TipoOco, Faltas, CondPre, CondPos
 		FROM Ocorrencia
 		WHERE EmailSended = "N"
-		LIMIT 10; 
+		LIMIT 5; 
 	"#)
 	.fetch(pool);
 

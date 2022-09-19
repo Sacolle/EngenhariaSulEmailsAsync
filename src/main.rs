@@ -8,8 +8,7 @@ extern crate lazy_static;
 use chrono::Datelike;
 use tokio::{fs as tfs, io::AsyncWriteExt};
 use tera::Tera;
-use sqlx::mysql::MySqlPoolOptions;
-use tokio_stream::{self as stream, StreamExt};
+use sqlx::{mysql::MySqlPoolOptions, MySqlPool};
 
 use io::{templating::{tera_round_n_places,build_from_template},send_email};
 use error::TableProcessError;
@@ -41,7 +40,6 @@ async fn main() {
 		.open(format!("{}-{}_log.txt",day.year(),day.month())).await
 		.expect("Falha em gerar o arquivo de log");
 	
-
 	if let Err(e) = laco_de_operacao(&mut log_file,&mut err_file).await{
 		assert!(log_error(&mut err_file,"ROOT", e).await.is_ok());
 	};
@@ -49,28 +47,14 @@ async fn main() {
 
 async fn laco_de_operacao(log_f:&mut tfs::File, err_f:&mut tfs::File)->Result<(),TableProcessError>{
 
-	let email_table_connect = MySqlPoolOptions::new()
+	let email_table_pool = MySqlPoolOptions::new()
 		.max_connections(5)
-		.connect(
-			&format!("{}{}",
-				&INIVALS.maria_url,
-				&INIVALS.maria_emaildb)
-			).await?;
+		.connect( &format!("{}{}", &INIVALS.maria_url, &INIVALS.maria_emaildb)).await?;
 
-	let empresas = query::empresas(&email_table_connect).await;
+	let empresas = query::empresas(&email_table_pool).await;
 
-	let mut handles = Vec::new();
-	for empresa in empresas{
-		let emails = query::emails(&email_table_connect, &empresa).await;
-		handles.push(tokio::spawn(async move {
-			let res = process_table(&empresa,emails).await;
-			(empresa, res)
-		}));
-	}
-	let mut stream = stream::iter(handles);
-	while let Some(result) = stream.next().await{
-		let (emp,res) = result.await?;
-		match res{
+	for emp in empresas{
+		match process_table(&emp,&email_table_pool).await{
 			Ok(_ids)=> {
 				println!("Tabela {} acessada com sucesso",&emp);
 				if let Some(ids) = _ids{
@@ -85,18 +69,21 @@ async fn laco_de_operacao(log_f:&mut tfs::File, err_f:&mut tfs::File)->Result<()
 	}
 	Ok(())
 }
-async fn process_table(empresa:&str,destinos:Vec<(Option<String>,Option<String>)>)->Result<Option<Vec<i32>>,TableProcessError>{
+async fn process_table(empresa:&str,email_pool:&MySqlPool)->Result<Option<Vec<i32>>,TableProcessError>{
 	let mut sent_emails = Vec::new();
-
 	let pool = MySqlPoolOptions::new()
 		.max_connections(10)
 		.connect( &format!("{}SGO_{}", &INIVALS.maria_url, empresa)).await?;
 
-	let ocorrencias = query::ocorrencias(&pool).await;
+	let (ocorrencias, destinos) = tokio::join!(
+		query::ocorrencias(&pool),
+		query::emails(email_pool, empresa)
+	);
 	if ocorrencias.is_empty(){
 		println!("Nenhum resultado da tabela SGO_{}",empresa);
 		return Ok(None);
 	}
+	//let destinos = vec![(None,Some(String::from("pedro.h.b.colle@gmail.com")))];
 
 	for ocor in ocorrencias{
 		let id = ocor.id();
