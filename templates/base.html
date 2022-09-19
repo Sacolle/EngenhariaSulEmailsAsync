@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>tabela</title>
+		<style>
+			table,td,tr,th{
+				border: 1px solid black;
+			}
+			td,th{
+				padding: 2.5px;
+			}
+			.txt{
+				margin-top: 0;
+				margin-bottom: 0;
+			}
+			.txt-t{
+				margin-bottom: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<p>Prezado Sr(a)</p>
+		<p>Voce está recebendo esta mensagem devido a uma ocorrência no sistema elétrico da empresa {{ empresa }}.</p>
+		<p class="txt-t">Subestação: {{ ocor.se }}</p>
+		<p class="txt">Modulo: {{ ocor.al }}</p>
+		<p class="txt">Equipamento: {{ ocor.eqp }}</p>
+		<p class="txt-t" style="white-space:pre;">Inicio:     {{ ocor.inicio }} </p>
+		<p class="txt">Termino: {{ ocor.fim }}</p>
+		<p>Duração: {{ duracao }}</p>	
+		<table style="width:1000px">	
+			<tr>
+				<th>CORRENTES DE FALTA</th>
+				<th>PRE-OCORRÊNCIA</th>
+				<th>PÓS-RESTABELECIMENTO</th>
+			</tr>
+			<tr>
+				<td></td>
+				<td>Potência Ativa = {{ round(num = ocor.condpre.P,n = 2) }}</td>
+				<td>Potência Ativa = {{ round(num = ocor.condpos.P,n = 2) }}</td>
+			</tr>
+			<tr>
+				<td>Correntes de Falta Fase A = {{ round(num = ocor.faltas.IaF,n = 2) }}</td>
+				<td>Correntes na Fase A = {{ round(num = ocor.condpre.Ia,n = 2) }}</td>
+				<td>Correntes na Fase A = {{ round(num = ocor.condpos.Ia,n = 2) }}</td>
+			</tr>
+			<tr>
+				<td>Correntes de Falta Fase B = {{ round(num = ocor.faltas.IbF,n = 2) }}</td>
+				<td>Correntes na Fase B = {{ round(num = ocor.condpre.Ib,n = 2) }}</td>
+				<td>Correntes na Fase B = {{ round(num = ocor.condpos.Ib,n = 2) }}</td>
+			</tr>
+			<tr>
+				<td>Correntes de Falta Fase C = {{ round(num = ocor.faltas.IcF,n = 2) }}</td>
+				<td>Correntes na Fase C = {{ round(num = ocor.condpre.Ic,n = 2) }}</td>
+				<td>Correntes na Fase C = {{ round(num = ocor.condpos.Ic,n = 2) }}</td>
+			</tr>
+			<tr>
+				<td>Correntes de Falta Fase Neutro = {{ round(num = ocor.faltas.InF,n = 2) }}</td>
+				<td>Correntes na Fase Neutro  = {{ round(num = ocor.condpre.In,n = 2) }}</td>
+				<td>Correntes na Fase Neutro  = {{ round(num = ocor.condpos.In,n = 2) }}</td>
+			</tr>
+		</table>
+		<br>
+		<table style="width:1000px">	
+			<tr>
+				<th colspan="4">EVENTOS</th>
+			</tr>
+			<tr style="text-align: center">
+				<td>Hora do Evento</td>
+				<td>Mensagem</td>
+				<td>Hora da Gravação</td>
+				<td>Operador</td>
+			</tr>
+			{% for soe in vec_soe %}
+			<tr>
+				<td>{{ soe.inicio }}</td>
+				<td>{{ soe.mensagem }}</td>
+				<td>{{ soe.fim }}</td>
+				<td>{{ soe.agente }}</td>
+			</tr>
+			{% endfor%}
+		</table>
+		<br>
+		<table style="width:1000px">	
+			<tr>
+				<th colspan="4">ÚLTIMAS OCORRÊNCIAS EM: {{ ocor.se }} {{ ocor.al }} {{ ocor.eqp }}</th>
+			</tr>
+			<tr style="text-align: center">
+				<td>Data Hora Ocorrências</td>
+				<td>Correntes de Falta</td>
+				<td>Proto Sen</td>
+				<td>Proto Atu</td>
+			</tr>
+			{% for eqp in vec_eqp %}
+			<tr>
+				<td>{{ eqp.inicio }}</td>
+				<td>
+					A = {{ round(num = eqp.faltas.IaF,n = 2) }} 
+					B = {{ round(num = eqp.faltas.IbF,n = 2) }}
+					C = {{ round(num = eqp.faltas.IcF,n = 2) }}
+					Neutro = {{ round(num = eqp.faltas.InF, n = 2) }}
+				</td>
+				<td>{{ eqp.prot_sen }}</td>
+				<td>{{ eqp.prot_atu }}</td>
+			</tr>
+			{% endfor%}
+		</table>
+	</body>
+</html>
