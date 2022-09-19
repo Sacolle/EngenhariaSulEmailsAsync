@@ -16,7 +16,7 @@ use error::TableProcessError;
 use db::{query,oracle_query};
 
 lazy_static!(
-	pub	static ref INIVALS: std::collections::HashMap<&'static str,String> = io::ini::load_config("config.ini");
+	pub	static ref INIVALS: io::ini::IniVals = io::ini::load_config("config.ini");
 	pub static ref TEMPLATE: Tera = {
 		let mut t = Tera::new("templates/*").unwrap();
 		t.register_function("round",  tera_round_n_places);
@@ -53,8 +53,8 @@ async fn laco_de_operacao(log_f:&mut tfs::File, err_f:&mut tfs::File)->Result<()
 		.max_connections(5)
 		.connect(
 			&format!("{}{}",
-				INIVALS.get("maria_url").unwrap(),
-				INIVALS.get("maria_emaildb").unwrap())
+				&INIVALS.maria_url,
+				&INIVALS.maria_emaildb)
 			).await?;
 
 	let empresas = query::empresas(&email_table_connect).await;
@@ -90,7 +90,7 @@ async fn process_table(empresa:&str,destinos:Vec<(Option<String>,Option<String>)
 
 	let pool = MySqlPoolOptions::new()
 		.max_connections(10)
-		.connect( &format!("{}SGO_{}", INIVALS.get("maria_url").unwrap(), empresa)).await?;
+		.connect( &format!("{}SGO_{}", &INIVALS.maria_url, empresa)).await?;
 
 	let ocorrencias = query::ocorrencias(&pool).await;
 	if ocorrencias.is_empty(){
@@ -113,7 +113,7 @@ async fn process_table(empresa:&str,destinos:Vec<(Option<String>,Option<String>)
 
 		let (title,body) = build_from_template(empresa, ocor, soes, eqps)?;
 		send_email::send_email(&destinos, title, body).await?;
-		query::update_ocorrencias(&pool, id).await;
+		let _affected = query::update_ocorrencias(&pool, id).await?;
 		sent_emails.push(id);
 	}
 	Ok(Some(sent_emails))
@@ -144,7 +144,7 @@ mod tests{
 		let empresa = "CERIM";
 		let pool = MySqlPoolOptions::new()
 			.max_connections(10)
-			.connect( &format!("{}SGO_{}", INIVALS.get("maria_url").unwrap(),empresa)).await.unwrap();
+			.connect( &format!("{}SGO_{}", &INIVALS.maria_url, empresa)).await.unwrap();
 
 		let ocor = sqlx::query_as::<_,Ocorrencia>(
 			"

@@ -11,8 +11,8 @@ pub async fn send_email(destinos:&Vec<(Option<String>,Option<String>)>,
 {
 	let mut email = Message::builder()
 		.from(format!("{} <{}>",
-			INIVALS.get("email_nome").unwrap(),
-			INIVALS.get("email_addrs").unwrap())
+			&INIVALS.email_nome,
+			&INIVALS.email_addrs)
 			.parse()?
 		)
 		.subject(title);
@@ -42,8 +42,8 @@ pub async fn send_email(destinos:&Vec<(Option<String>,Option<String>)>,
 		)?;
 
 	let creds = Credentials::new(
-		INIVALS.get("email_addrs").unwrap().clone(),
-		INIVALS.get("email_senha").unwrap().clone()
+		INIVALS.email_addrs.clone(),
+		INIVALS.email_senha.clone()
 	);
 
 	// Open a remote connection to gmail

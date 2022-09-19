@@ -1,7 +1,7 @@
 use sqlx::mysql::MySqlPool;
 use tokio_stream::StreamExt;
 
-use crate::db::chunks::*;
+use crate::{db::chunks::*, error::TableProcessError};
 
 ///realiza o query das falhas anteriores deste equipamento, omitindo a instância atual do equipamento
 pub async fn equipamentos(pool: &MySqlPool, se:&str, al:&str, eqp:&str, id:&i32)->Vec<PrevEqp>{
@@ -56,9 +56,12 @@ pub async fn emails(pool: &MySqlPool,empresa: &str)->Vec<(Option<String>,Option<
 
 pub async fn ocorrencias(pool:&MySqlPool)->Vec<Ocorrencia>{
 	let stream = sqlx::query_as::<_,Ocorrencia>(
-		"
-		SELECT OcoId, SE, AL, EQP, DtHrIni, DtHrFim, TipoOco, Faltas, CondPre, CondPos FROM Ocorrencia LIMIT 10; 
-	")
+		r#"
+		SELECT OcoId, SE, AL, EQP, DtHrIni, DtHrFim, TipoOco, Faltas, CondPre, CondPos
+		FROM Ocorrencia
+		WHERE EmailSended = "N"
+		LIMIT 10; 
+	"#)
 	.fetch(pool);
 
 	stream.filter_map(|val|val.ok()).collect().await
@@ -76,16 +79,14 @@ pub async fn ocorrencias_soe(pool:&MySqlPool,id:i32)->Vec<OcorrenciaSoe>{
 	stream.filter_map(|val|val.ok()).collect().await
 }
 
-pub async fn update_ocorrencias(pool:&MySqlPool,id:i32){
+pub async fn update_ocorrencias(pool:&MySqlPool,id:i32)->Result<u64,TableProcessError>{
 	let rows_affected = sqlx::query(
 		r#"
-		UPDATE Ocorrencia_SOE SET EmailSended = "S" WHERE id = ?;
+		UPDATE Ocorrencia SET EmailSended = "S" WHERE OcoId = ?;
 	"#)
 	.bind(id)
 	.execute(pool)
-	.await
-	.unwrap()	//FIXME: fazer error handling
+	.await?
 	.rows_affected();
-
-	assert!(rows_affected > 0);
+	Ok(rows_affected)
 }

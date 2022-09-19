@@ -9,9 +9,9 @@ use crate::INIVALS;
 //retorna hora_inicio, hora_fim, mensagem e agente da tabela
 pub fn ocor_soe(empresa:&str, id:i32,)->Result<Vec<OcorrenciaSoe>,TableProcessError>{
 	let conn = Connection::connect(
-		INIVALS.get("oracle_user").unwrap(),
-		INIVALS.get("oracle_senha").unwrap(),
-		INIVALS.get("oracle_url").unwrap())?;
+		&INIVALS.oracle_user,
+		&INIVALS.oracle_senha,
+		&INIVALS.oracle_url)?;
 
 	let query = "SELECT hora_inicio, hora_fim, mensagem, agente FROM :1 WHERE ocor_id = :2";
 

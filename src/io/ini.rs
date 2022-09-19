@@ -1,16 +1,24 @@
 use configparser::ini::Ini;
-use std::collections::HashMap;
 
 static MARIA:&str = "chaves_db_maria";
 static ORACLE:&str = "chaves_db_oracle";
 static EMAIL:&str = "email_creds";
 
+pub struct IniVals{
+	pub maria_url: String,
+	pub maria_emaildb: String,
+	pub oracle_url: String,
+	pub oracle_user: String,
+	pub oracle_senha: String,
+	pub email_nome: String,
+	pub email_addrs: String,
+	pub email_senha: String,
+}
+
 ///carrega as infos do arquivo ini a u hashmap usando a lib configparser
-pub fn load_config(file:&str)->HashMap<&'static str, String>{
+pub fn load_config(file:&str)->IniVals{
 	let mut ini = Ini::new();
 	ini.load(file).unwrap();
-
-	let mut res = HashMap::new();
 
 	//chaves para a maria db
 	let maria_url = format!("mysql://{}:{}@{}/",
@@ -18,22 +26,20 @@ pub fn load_config(file:&str)->HashMap<&'static str, String>{
 		ini.get(MARIA,"senha").unwrap(),
 		ini.get(MARIA,"url").unwrap()
 	);		
-	res.insert("maria_url", maria_url);
-	res.insert("maria_emaildb", ini.get(MARIA, "emaildb").unwrap());
+	let maria_emaildb = ini.get(MARIA, "emaildb").unwrap();
 
 	//chaves para o oracle db
 	let oracle_url = format!("{}:{}",
 		ini.get(ORACLE,"url").unwrap(),
 		ini.get(ORACLE,"port").unwrap(),
 	);
-	res.insert("oracle_url",oracle_url);
-	res.insert("oracle_user", ini.get(ORACLE,"user").unwrap());
-	res.insert("oracle_senha", ini.get(ORACLE,"senha").unwrap());
+	let oracle_user = ini.get(ORACLE,"user").unwrap();
+	let oracle_senha = ini.get(ORACLE,"senha").unwrap();
 
 	//chaves para o email
-	res.insert("email_nome", ini.get(EMAIL,"nome").unwrap());
-	res.insert("email_addrs", ini.get(EMAIL,"email").unwrap());
-	res.insert("email_senha", ini.get(EMAIL,"senha").unwrap());
+	let email_nome = ini.get(EMAIL,"nome").unwrap();
+	let email_addrs = ini.get(EMAIL,"email").unwrap();
+	let email_senha = ini.get(EMAIL,"senha").unwrap();
 
-	res
+	IniVals { maria_url, maria_emaildb, oracle_url, oracle_user, oracle_senha, email_nome, email_addrs, email_senha }
 }
