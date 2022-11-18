@@ -32,7 +32,7 @@ pub async fn send_email(destinos:&Vec<(Option<String>,Option<String>)>,
 			.singlepart(
 				SinglePart::builder()
 					.header(header::ContentType::TEXT_PLAIN)
-					.body(String::from("Falha em carregar a tabela")), //fallback.
+					.body(String::from("Ocorrencia")), //fallback.
 			)
 			.singlepart(
 				SinglePart::builder()

@@ -1,4 +1,5 @@
 /target
 /testres
+/final
 *.ini
 *.txt

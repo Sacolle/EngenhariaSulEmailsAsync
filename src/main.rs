@@ -83,7 +83,6 @@ async fn process_table(empresa:&str,email_pool:&MySqlPool)->Result<Option<Vec<i3
 		println!("Nenhum resultado da tabela SGO_{}",empresa);
 		return Ok(None);
 	}
-	//let destinos = vec![(None,Some(String::from("pedro.h.b.colle@gmail.com")))];
 
 	for ocor in ocorrencias{
 		let id = ocor.id();
@@ -93,10 +92,11 @@ async fn process_table(empresa:&str,email_pool:&MySqlPool)->Result<Option<Vec<i3
 			query::ocorrencias_soe(&pool, id),
 			query::equipamentos(&pool, se, al, eqp, &id)
 		);
+		/*
 		if soes.is_empty(){
 			println!("não foi encontrado nenhu valor de soe na tabela da empresa {}, procurando na ORACLE",empresa);
 			soes = oracle_query::ocor_soe(empresa, id)?;
-		}
+		} */
 
 		let (title,body) = build_from_template(empresa, ocor, soes, eqps)?;
 		send_email::send_email(&destinos, title, body).await?;

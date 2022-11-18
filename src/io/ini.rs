@@ -8,6 +8,7 @@ pub struct IniVals{
 	pub maria_url: String,
 	pub maria_emaildb: String,
 	pub oracle_url: String,
+	pub oracle_port: String,
 	pub oracle_user: String,
 	pub oracle_senha: String,
 	pub email_nome: String,
@@ -29,10 +30,8 @@ pub fn load_config(file:&str)->IniVals{
 	let maria_emaildb = ini.get(MARIA, "emaildb").unwrap();
 
 	//chaves para o oracle db
-	let oracle_url = format!("{}:{}",
-		ini.get(ORACLE,"url").unwrap(),
-		ini.get(ORACLE,"port").unwrap(),
-	);
+	let oracle_url = ini.get(ORACLE,"url").unwrap();
+	let oracle_port = ini.get(ORACLE,"port").unwrap();
 	let oracle_user = ini.get(ORACLE,"user").unwrap();
 	let oracle_senha = ini.get(ORACLE,"senha").unwrap();
 
@@ -41,5 +40,5 @@ pub fn load_config(file:&str)->IniVals{
 	let email_addrs = ini.get(EMAIL,"email").unwrap();
 	let email_senha = ini.get(EMAIL,"senha").unwrap();
 
-	IniVals { maria_url, maria_emaildb, oracle_url, oracle_user, oracle_senha, email_nome, email_addrs, email_senha }
+	IniVals { maria_url, maria_emaildb, oracle_url, oracle_port, oracle_user, oracle_senha, email_nome, email_addrs, email_senha }
 }
